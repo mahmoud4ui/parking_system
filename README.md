@@ -2,7 +2,7 @@
 
 A Flutter app for finding and booking parking in Dubai. Browse garages on a map or in a list, see how many spaces are left, book a time slot, follow a live countdown and get a reminder before your session ends.
 
-[**Try it live**](https://your-username.github.io/parking_system/) · ![CI](https://github.com/your-username/parking_system/actions/workflows/ci.yml/badge.svg)
+[**Try it live**](https://mahmoud4ui.github.io/parking_system/) · ![CI](https://github.com/your-username/parking_system/actions/workflows/ci.yml/badge.svg)
 
 > The live demo runs in the browser. Reminders are only available in the Android and iOS apps.
 
@@ -128,4 +128,4 @@ The tests cover booking phases (upcoming, active, completed, cancelled), availab
 
 Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
 
-Built by [Your name](https://github.com/your-username).
+Built by [Your name](https://github.com/mahmoud4ui).
