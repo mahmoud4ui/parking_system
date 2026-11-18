@@ -8,17 +8,16 @@ A Flutter app for finding and booking parking in Dubai. Browse garages on a map 
 
 > **This is a portfolio demo.** Garage listings, prices and availability are sample data, and everything is stored on the device. See [Limitations](#limitations) and [What I'd build next](#what-id-build-next).
 
-<!-- Add your screenshots to docs/screenshots/ using these names, or change the paths below. -->
 
 ## Screenshots
 
-| Onboarding | Home | Map |
+| Home | Map | Garage details |
 | :---: | :---: | :---: |
-| ![Onboarding](docs/screenshots/onboarding.png) | ![Home](docs/screenshots/home.png) | ![Map](docs/screenshots/map.png) |
+| ![Home](docs/screenshots/home.png) | ![Map](docs/screenshots/map.png) | ![Garage details](docs/screenshots/details.png) |
 
-| Garage details | Booking | My Bookings |
+| Booking | Confirmation | My Bookings |
 | :---: | :---: | :---: |
-| ![Garage details](docs/screenshots/details.png) | ![Booking](docs/screenshots/booking.png) | ![My Bookings](docs/screenshots/bookings.png) |
+| ![Booking](docs/screenshots/booking.png) | ![Confirmation](docs/screenshots/confirmation.png) | ![My Bookings](docs/screenshots/bookings.png) |
 
 ## Features
 
