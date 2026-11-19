@@ -7,6 +7,7 @@ import '../state/bookings_controller.dart';
 import '../state/location_controller.dart';
 import '../state/saved_garages_controller.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_logo.dart';
 import '../widgets/garage_card.dart';
 import '../widgets/garage_details_sheet.dart';
 import '../widgets/garage_map.dart';
@@ -248,19 +249,7 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
   Widget _buildHeader() {
     return Row(
       children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: primaryTeal,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: const Icon(
-            Icons.local_parking,
-            color: Colors.white,
-            size: 28,
-          ),
-        ),
+        const AppLogo(),
         const SizedBox(width: 12),
         const Expanded(
           child: Column(

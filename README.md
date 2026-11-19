@@ -18,6 +18,7 @@ A Flutter app for finding and booking parking in Dubai. Browse garages on a map 
 | Booking | Confirmation | My Bookings |
 | :---: | :---: | :---: |
 | ![Booking](docs/screenshots/booking.png) | ![Confirmation](docs/screenshots/confirmation.png) | ![My Bookings](docs/screenshots/bookings.png) |
+| ![Nearby](docs/screenshots/home-nearby.png) | ![Confirmation](docs/screenshots/confirmation.png) | |
 
 ## Features
 

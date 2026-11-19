@@ -76,10 +76,9 @@ class GarageCard extends StatelessWidget {
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
-                            distanceMeters == null
-                                ? garage.area
-                                : '${garage.area} · '
-                                    '${formatDistance(distanceMeters!)} away',
+                            garage.area,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 12,
                               color: secondaryText,
@@ -88,6 +87,27 @@ class GarageCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (distanceMeters != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.near_me_outlined,
+                            size: 14,
+                            color: primaryTeal,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${formatDistance(distanceMeters!)} away',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: primaryTeal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Row(
                       children: [

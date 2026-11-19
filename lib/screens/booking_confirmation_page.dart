@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/booking.dart';
 import '../models/garage.dart';
 import '../theme/app_theme.dart';
+import '../utils/directions.dart';
 import '../utils/formatters.dart';
 
 class BookingConfirmationPage extends StatelessWidget {
@@ -172,14 +173,31 @@ class BookingConfirmationPage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
+                onPressed: () => openDirections(context, garage),
+                icon: const Icon(Icons.navigation_outlined),
+                label: const Text('Navigate to garage'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryTeal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
                 onPressed: () {
                   Navigator.of(context).popUntil((route) => route.isFirst);
                 },
                 icon: const Icon(Icons.home_outlined),
                 label: const Text('Back to Home'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryTeal,
-                  foregroundColor: Colors.white,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primaryTeal,
+                  side: const BorderSide(color: primaryTeal),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
