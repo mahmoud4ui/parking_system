@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../models/garage.dart';
 import '../theme/app_theme.dart';
+import '../utils/formatters.dart';
 import 'availability_badge.dart';
 
 class GarageCard extends StatelessWidget {
   final Garage garage;
   final int? availableSpaces;
+
+  /// Straight-line distance in metres, when the user's location is known.
+  final double? distanceMeters;
   final bool isSaved;
   final VoidCallback onTap;
   final VoidCallback onToggleSaved;
@@ -15,6 +19,7 @@ class GarageCard extends StatelessWidget {
     super.key,
     required this.garage,
     required this.availableSpaces,
+    this.distanceMeters,
     required this.isSaved,
     required this.onTap,
     required this.onToggleSaved,
@@ -71,7 +76,10 @@ class GarageCard extends StatelessWidget {
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
-                            garage.area,
+                            distanceMeters == null
+                                ? garage.area
+                                : '${garage.area} · '
+                                    '${formatDistance(distanceMeters!)} away',
                             style: const TextStyle(
                               fontSize: 12,
                               color: secondaryText,

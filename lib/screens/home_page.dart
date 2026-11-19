@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../data/sample_garages.dart';
 import '../models/garage.dart';
 import '../state/bookings_controller.dart';
+import '../state/location_controller.dart';
 import '../state/saved_garages_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/garage_card.dart';
@@ -28,11 +29,20 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
 
   String _searchQuery = '';
   int _selectedTab = 0;
+  Garage? _focusedGarage;
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Moves the home map to [garage], then shows its details.
+  void _openGarage(Garage garage) {
+    setState(() {
+      _focusedGarage = garage;
+    });
+    showGarageDetails(context, garage);
   }
 
   void _selectTab(int index) {
@@ -99,7 +109,8 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
   Widget _buildGarageList() {
     final saved = context.watch<SavedGaragesController>();
     final bookings = context.watch<BookingsController>();
-    final garages = _visibleGarages(saved);
+    final location = context.watch<LocationController>();
+    final garages = location.arrange(_visibleGarages(saved));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
@@ -122,10 +133,13 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
         ),
         const SizedBox(height: 24),
         _buildSearchField(),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
+        _buildLocationBar(location),
+        const SizedBox(height: 16),
         GarageMap(
           garages: garages,
-          onGarageTap: (garage) => showGarageDetails(context, garage),
+          focused: _focusedGarage,
+          onGarageTap: _openGarage,
         ),
         const SizedBox(height: 24),
         Row(
@@ -157,8 +171,9 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
               garage: garage,
               availableSpaces:
                   bookings.isLoaded ? bookings.freeSpaces(garage) : null,
+              distanceMeters: location.distanceTo(garage),
               isSaved: saved.isSaved(garage),
-              onTap: () => showGarageDetails(context, garage),
+              onTap: () => _openGarage(garage),
               onToggleSaved: () => saved.toggle(garage),
             ),
         const SizedBox(height: 18),
@@ -168,6 +183,64 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
             style: TextStyle(color: secondaryText, fontSize: 11),
           ),
         ),
+      ],
+    );
+  }
+
+  /// "Use my location" before it is known; afterwards a "Nearest first"
+  /// toggle. Location is only requested when the user taps the button.
+  Widget _buildLocationBar(LocationController location) {
+    if (location.hasLocation) {
+      return Row(
+        children: [
+          const Icon(Icons.my_location, size: 18, color: primaryTeal),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'Showing distances from you',
+              style: TextStyle(fontSize: 13, color: secondaryText),
+            ),
+          ),
+          FilterChip(
+            label: const Text('Nearest first'),
+            selected: location.sortByNearest,
+            onSelected: location.setSortByNearest,
+            selectedColor: lightTeal,
+            checkmarkColor: primaryTeal,
+          ),
+        ],
+      );
+    }
+
+    final isLoading = location.status == LocationStatus.loading;
+    final message = location.failureMessage;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        OutlinedButton.icon(
+          onPressed: isLoading ? null : location.request,
+          icon: isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.my_location),
+          label: Text(isLoading ? 'Finding you…' : 'Use my location'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: primaryTeal,
+            side: const BorderSide(color: primaryTeal),
+          ),
+        ),
+        if (message != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 12, color: Color(0xFFDC2626)),
+            ),
+          ),
       ],
     );
   }

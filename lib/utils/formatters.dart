@@ -28,3 +28,10 @@ String formatCountdown(Duration duration) {
   if (d.inHours > 0) return '${d.inHours}h ${two(minutes)}m ${two(seconds)}s';
   return '${minutes}m ${two(seconds)}s';
 }
+
+/// Formats a distance: "850 m" under a kilometre, otherwise "2.3 km".
+String formatDistance(double meters) {
+  final rounded = (meters / 10).round() * 10;
+  if (rounded < 1000) return '$rounded m';
+  return '${(meters / 1000).toStringAsFixed(1)} km';
+}

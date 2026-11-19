@@ -5,9 +5,12 @@ import 'repositories/local_parking_repository.dart';
 import 'repositories/parking_repository.dart';
 import 'screens/home_page.dart';
 import 'screens/onboarding_page.dart';
+import 'services/geolocator_location_service.dart';
 import 'services/local_notification_service.dart';
+import 'services/location_service.dart';
 import 'services/reminder_service.dart';
 import 'state/bookings_controller.dart';
+import 'state/location_controller.dart';
 import 'state/profile_controller.dart';
 import 'state/saved_garages_controller.dart';
 import 'theme/app_theme.dart';
@@ -25,6 +28,7 @@ Future<void> main() async {
     ParkingApp(
       repository: repository,
       reminders: reminders,
+      locationService: const GeolocatorLocationService(),
       showOnboarding: !seenOnboarding,
     ),
   );
@@ -33,6 +37,7 @@ Future<void> main() async {
 class ParkingApp extends StatefulWidget {
   final ParkingRepository repository;
   final ReminderService reminders;
+  final LocationService locationService;
 
   /// Whether to show the intro slides before the home page.
   final bool showOnboarding;
@@ -41,6 +46,7 @@ class ParkingApp extends StatefulWidget {
     super.key,
     required this.repository,
     required this.reminders,
+    required this.locationService,
     this.showOnboarding = false,
   });
 
@@ -77,6 +83,9 @@ class _ParkingAppState extends State<ParkingApp> {
         ChangeNotifierProvider(
           create: (_) =>
               SavedGaragesController(repository: widget.repository)..load(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => LocationController(service: widget.locationService),
         ),
         ChangeNotifierProvider(
           create: (_) =>

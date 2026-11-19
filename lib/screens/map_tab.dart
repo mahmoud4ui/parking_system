@@ -5,11 +5,13 @@ import 'package:provider/provider.dart';
 
 import '../models/garage.dart';
 import '../state/bookings_controller.dart';
+import '../state/location_controller.dart';
 import '../theme/app_theme.dart';
 import '../utils/directions.dart';
 import '../widgets/availability_badge.dart';
 import '../widgets/garage_details_sheet.dart';
 import '../widgets/garage_pin.dart';
+import '../widgets/user_location_marker.dart';
 
 /// Full-screen map. Each garage is a price pin; tapping one opens a preview
 /// card with availability, directions and booking.
@@ -43,6 +45,7 @@ class _MapTabState extends State<MapTab> {
   Widget build(BuildContext context) {
     final selected = _selected;
     final bookings = context.watch<BookingsController>();
+    final userPosition = context.watch<LocationController>().position;
 
     return Stack(
       children: [
@@ -64,6 +67,7 @@ class _MapTabState extends State<MapTab> {
             ),
             MarkerLayer(
               markers: [
+                if (userPosition != null) userLocationMarker(userPosition),
                 for (final garage in widget.garages)
                   Marker(
                     point: garage.location,

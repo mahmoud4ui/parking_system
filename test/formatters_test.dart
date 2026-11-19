@@ -74,4 +74,16 @@ void main() {
       expect(garage.priceLabel, '\$7.50 / hour');
     });
   });
+
+  group('formatDistance', () {
+    test('uses metres under a kilometre, rounded to 10', () {
+      expect(formatDistance(842), '840 m');
+      expect(formatDistance(999), '1.0 km');
+    });
+
+    test('uses kilometres from 1 km', () {
+      expect(formatDistance(1000), '1.0 km');
+      expect(formatDistance(2340), '2.3 km');
+    });
+  });
 }

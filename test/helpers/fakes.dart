@@ -1,6 +1,7 @@
 import 'package:parking_system/models/booking.dart';
 import 'package:parking_system/models/user_profile.dart';
 import 'package:parking_system/repositories/parking_repository.dart';
+import 'package:parking_system/services/location_service.dart';
 import 'package:parking_system/services/reminder_service.dart';
 
 /// Repository that keeps everything in memory, so controller tests need no
@@ -91,4 +92,18 @@ Booking makeBooking({
     totalPrice: 10.0 * durationHours,
     status: status,
   );
+}
+
+/// Returns a fixed result instead of asking a real GPS.
+class FakeLocationService implements LocationService {
+  LocationResult result;
+  int calls = 0;
+
+  FakeLocationService(this.result);
+
+  @override
+  Future<LocationResult> getCurrentLocation() async {
+    calls++;
+    return result;
+  }
 }
