@@ -46,6 +46,13 @@ void main() {
     });
   });
 
+  group('formatHours', () {
+    test('uses the singular for one hour and the plural otherwise', () {
+      expect(formatHours(1), '1 hour');
+      expect(formatHours(3), '3 hours');
+    });
+  });
+
   group('Garage price', () {
     test('whole prices have no decimals', () {
       expect(sampleGarages.first.shortPrice, '\$10');

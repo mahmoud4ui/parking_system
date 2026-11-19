@@ -114,6 +114,19 @@ The tests cover booking phases (upcoming, active, completed, cancelled), availab
 - **OpenStreetMap tiles** are loaded from the public tile server, which is fine for a demo but not for production use. A real app would use a tile provider with an appropriate plan.
 - **Reminders** use inexact scheduling, so on some phones they may arrive a few minutes late.
 
+## Architecture
+
+State is managed with **Provider**. Screens never touch storage or notifications directly.
+
+- `models/` – `Garage`, `Booking`, `UserProfile`
+- `domain/` – pure availability rules (no Flutter, no storage), easy to unit test
+- `repositories/` – `ParkingRepository` interface and its `shared_preferences` implementation
+- `services/` – `ReminderService` interface and its local-notification implementation
+- `state/` – `BookingsController`, `SavedGaragesController`, `ProfileController` (`ChangeNotifier`s)
+- `screens/`, `widgets/` – UI that watches the controllers
+
+Controllers receive their repository and reminder service through the constructor, so tests run against in-memory fakes with a fixed clock.
+
 ## What I'd build next
 
 - **Backend and accounts** (Firebase or Supabase) so availability and bookings are shared between users and devices.

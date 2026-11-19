@@ -141,7 +141,7 @@ class BookingConfirmationPage extends StatelessWidget {
                   _ConfirmationRow(
                     icon: Icons.timelapse,
                     label: 'Duration',
-                    value: '${booking.durationHours} hours',
+                    value: formatHours(booking.durationHours),
                   ),
                   const Divider(height: 28),
                   Row(

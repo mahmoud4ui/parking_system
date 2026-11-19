@@ -4,6 +4,9 @@ String formatDate(DateTime date) => '${date.day}/${date.month}/${date.year}';
 /// Formats an amount as a dollar price with two decimals (e.g. $10.00).
 String formatPrice(double amount) => '\$${amount.toStringAsFixed(2)}';
 
+/// Formats a number of hours: "1 hour", "3 hours".
+String formatHours(int hours) => hours == 1 ? '1 hour' : '$hours hours';
+
 /// Formats a clock time such as "3:05 PM".
 String formatClock(DateTime time) {
   final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;

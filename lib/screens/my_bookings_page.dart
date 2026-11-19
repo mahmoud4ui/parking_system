@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/booking.dart';
-import '../services/storage_service.dart';
+import '../state/bookings_controller.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
 
@@ -15,15 +16,12 @@ class MyBookingsPage extends StatefulWidget {
 }
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
-  List<Booking> _bookings = [];
   DateTime _now = DateTime.now();
   Timer? _ticker;
 
   @override
   void initState() {
     super.initState();
-    _loadBookings();
-
     // Drives the live countdowns.
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
@@ -37,15 +35,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   void dispose() {
     _ticker?.cancel();
     super.dispose();
-  }
-
-  Future<void> _loadBookings() async {
-    final bookings = await StorageService.loadBookings();
-    if (!mounted) return;
-
-    setState(() {
-      _bookings = bookings;
-    });
   }
 
   Future<void> _confirmAndCancel(Booking booking) async {
@@ -76,8 +65,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
     if (shouldCancel != true || !mounted) return;
 
-    await StorageService.cancelBooking(booking.id);
-    await _loadBookings();
+    await context.read<BookingsController>().cancelBooking(booking.id);
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -94,9 +82,10 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   Widget build(BuildContext context) {
     // Upcoming: soonest first. History: most recent first. Bookings move
     // from one tab to the other by themselves when their session ends.
-    final upcoming = _bookings.where(_isUpcoming).toList()
+    final all = context.watch<BookingsController>().bookings;
+    final upcoming = all.where(_isUpcoming).toList()
       ..sort((a, b) => a.start.compareTo(b.start));
-    final history = _bookings.where((b) => !_isUpcoming(b)).toList()
+    final history = all.where((b) => !_isUpcoming(b)).toList()
       ..sort((a, b) => b.start.compareTo(a.start));
 
     return DefaultTabController(
@@ -235,7 +224,7 @@ class _BookingCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text('Date: ${formatDate(booking.date)}'),
             Text('Start time: ${time.format(context)}'),
-            Text('Duration: ${booking.durationHours} hour(s)'),
+            Text('Duration: ${formatHours(booking.durationHours)}'),
             const SizedBox(height: 8),
             Text(
               'Total: ${formatPrice(booking.totalPrice)}',

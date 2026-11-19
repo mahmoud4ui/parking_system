@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../services/notification_service.dart';
-import '../services/storage_service.dart';
+import '../services/reminder_service.dart';
+import '../state/profile_controller.dart';
 import '../theme/app_theme.dart';
 import 'my_bookings_page.dart';
 import 'onboarding_page.dart';
@@ -18,39 +19,41 @@ class ProfileTab extends StatefulWidget {
 }
 
 class _ProfileTabState extends State<ProfileTab> {
-  static final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  String _profileName = StorageService.defaultProfile.name;
-  String _profileEmail = StorageService.defaultProfile.email;
+  late final ProfileController _controller;
 
   @override
   void initState() {
     super.initState();
-    _nameController.text = _profileName;
-    _emailController.text = _profileEmail;
-    _loadProfile();
+    _controller = context.read<ProfileController>();
+    _fillFields();
+    // The profile loads asynchronously; fill the fields when it arrives.
+    // (Done in a listener, not build, so no setState happens during build.)
+    _controller.addListener(_onProfileChanged);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onProfileChanged);
     _nameController.dispose();
     _emailController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadProfile() async {
-    final profile = await StorageService.loadProfile();
-    if (!mounted) return;
+  void _fillFields() {
+    _nameController.text = _controller.profile.name;
+    _emailController.text = _controller.profile.email;
+  }
 
-    setState(() {
-      _profileName = profile.name;
-      _profileEmail = profile.email;
-      _nameController.text = profile.name;
-      _emailController.text = profile.email;
-    });
+  void _onProfileChanged() {
+    // Only overwrite what the user typed when the stored profile differs.
+    final profile = _controller.profile;
+    if (_nameController.text.trim() != profile.name ||
+        _emailController.text.trim() != profile.email) {
+      _fillFields();
+    }
   }
 
   void _showMessage(String message) {
@@ -60,26 +63,12 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Future<void> _saveProfile() async {
-    final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
-
-    if (name.isEmpty) {
-      _showMessage('Please enter your name.');
-      return;
-    }
-    if (!_emailPattern.hasMatch(email)) {
-      _showMessage('Please enter a valid email address.');
-      return;
-    }
-
-    await StorageService.saveProfile(name: name, email: email);
+    final error = await _controller.save(
+      name: _nameController.text,
+      email: _emailController.text,
+    );
     if (!mounted) return;
-
-    setState(() {
-      _profileName = name;
-      _profileEmail = email;
-    });
-    _showMessage('Profile updated successfully.');
+    _showMessage(error ?? 'Profile updated successfully.');
   }
 
   InputDecoration _fieldDecoration(String label, IconData icon) {
@@ -97,6 +86,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<ProfileController>().profile;
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
       children: [
@@ -125,7 +115,7 @@ class _ProfileTabState extends State<ProfileTab> {
               ),
               const SizedBox(height: 14),
               Text(
-                _profileName,
+                profile.name,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -134,7 +124,7 @@ class _ProfileTabState extends State<ProfileTab> {
               ),
               const SizedBox(height: 6),
               Text(
-                _profileEmail,
+                profile.email,
                 style: const TextStyle(color: secondaryText, fontSize: 13),
               ),
             ],
@@ -217,7 +207,7 @@ class _ProfileTabState extends State<ProfileTab> {
             subtitle: const Text('Sends one now and one in 10 seconds'),
             onTap: () async {
               final message =
-                  await NotificationService.sendTestNotifications();
+                  await context.read<ReminderService>().sendTestNotifications();
               if (!mounted) return;
               _showMessage(message);
             },

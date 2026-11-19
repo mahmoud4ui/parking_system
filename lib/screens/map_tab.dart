@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 import '../models/garage.dart';
+import '../state/bookings_controller.dart';
 import '../theme/app_theme.dart';
 import '../utils/directions.dart';
 import '../widgets/availability_badge.dart';
@@ -13,13 +15,8 @@ import '../widgets/garage_pin.dart';
 /// card with availability, directions and booking.
 class MapTab extends StatefulWidget {
   final List<Garage> garages;
-  final Map<String, int> availability;
 
-  const MapTab({
-    super.key,
-    required this.garages,
-    required this.availability,
-  });
+  const MapTab({super.key, required this.garages});
 
   @override
   State<MapTab> createState() => _MapTabState();
@@ -45,6 +42,7 @@ class _MapTabState extends State<MapTab> {
   @override
   Widget build(BuildContext context) {
     final selected = _selected;
+    final bookings = context.watch<BookingsController>();
 
     return Stack(
       children: [
@@ -148,7 +146,8 @@ class _MapTabState extends State<MapTab> {
                 : _PreviewCard(
                     key: ValueKey(selected.name),
                     garage: selected,
-                    available: widget.availability[selected.name],
+                    available:
+                        bookings.isLoaded ? bookings.freeSpaces(selected) : null,
                     onClose: () => setState(() => _selected = null),
                   ),
           ),

@@ -1,10 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../data/sample_garages.dart';
 import '../models/garage.dart';
-import '../services/storage_service.dart';
+import '../state/bookings_controller.dart';
+import '../state/saved_garages_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/garage_card.dart';
 import '../widgets/garage_details_sheet.dart';
@@ -25,67 +25,14 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
   static const int _profileTab = 3;
 
   final TextEditingController _searchController = TextEditingController();
-  final Set<String> _savedGarageNames = {};
-
-  Map<String, int> _availability = {};
-  Timer? _refreshTimer;
 
   String _searchQuery = '';
   int _selectedTab = 0;
 
   @override
-  void initState() {
-    super.initState();
-    _loadSavedGarages();
-    _loadAvailability();
-
-    // Refresh when a booking is made or cancelled, and once a minute so
-    // spaces free up as bookings end.
-    StorageService.changes.addListener(_loadAvailability);
-    _refreshTimer = Timer.periodic(
-      const Duration(minutes: 1),
-      (_) => _loadAvailability(),
-    );
-  }
-
-  @override
   void dispose() {
-    StorageService.changes.removeListener(_loadAvailability);
-    _refreshTimer?.cancel();
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadAvailability() async {
-    final availability = await StorageService.loadAvailability();
-    if (!mounted) return;
-
-    setState(() {
-      _availability = availability;
-    });
-  }
-
-  Future<void> _loadSavedGarages() async {
-    final names = await StorageService.loadSavedGarageNames();
-    if (!mounted) return;
-
-    setState(() {
-      _savedGarageNames
-        ..clear()
-        ..addAll(names);
-    });
-  }
-
-  Future<void> _toggleSaved(Garage garage) async {
-    setState(() {
-      if (_savedGarageNames.contains(garage.name)) {
-        _savedGarageNames.remove(garage.name);
-      } else {
-        _savedGarageNames.add(garage.name);
-      }
-    });
-
-    await StorageService.saveGarageNames(_savedGarageNames);
   }
 
   void _selectTab(int index) {
@@ -95,12 +42,12 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
   }
 
   /// Garages for the current tab (all, or only saved) filtered by the search.
-  List<Garage> get _visibleGarages {
+  List<Garage> _visibleGarages(SavedGaragesController saved) {
     final query = _searchQuery.toLowerCase();
 
     return sampleGarages.where((garage) {
       if (_selectedTab == _savedTab &&
-          !_savedGarageNames.contains(garage.name)) {
+          !saved.isSaved(garage)) {
         return false;
       }
       if (query.isEmpty) return true;
@@ -117,10 +64,7 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
       body: SafeArea(
         child: switch (_selectedTab) {
           _profileTab => ProfileTab(onOpenSaved: () => _selectTab(_savedTab)),
-          _mapTab => MapTab(
-              garages: sampleGarages,
-              availability: _availability,
-            ),
+          _mapTab => const MapTab(garages: sampleGarages),
           _ => _buildGarageList(),
         },
       ),
@@ -153,7 +97,9 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
   }
 
   Widget _buildGarageList() {
-    final garages = _visibleGarages;
+    final saved = context.watch<SavedGaragesController>();
+    final bookings = context.watch<BookingsController>();
+    final garages = _visibleGarages(saved);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
@@ -209,10 +155,11 @@ class _ParkingHomePageState extends State<ParkingHomePage> {
           for (final garage in garages)
             GarageCard(
               garage: garage,
-              availableSpaces: _availability[garage.name],
-              isSaved: _savedGarageNames.contains(garage.name),
+              availableSpaces:
+                  bookings.isLoaded ? bookings.freeSpaces(garage) : null,
+              isSaved: saved.isSaved(garage),
               onTap: () => showGarageDetails(context, garage),
-              onToggleSaved: () => _toggleSaved(garage),
+              onToggleSaved: () => saved.toggle(garage),
             ),
         const SizedBox(height: 18),
         const Center(

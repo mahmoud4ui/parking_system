@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:parking_system/data/sample_garages.dart';
+import 'package:parking_system/screens/booking_page.dart';
 import 'package:parking_system/screens/onboarding_page.dart';
+import 'package:parking_system/state/bookings_controller.dart';
 import 'package:parking_system/widgets/availability_badge.dart';
+import 'package:provider/provider.dart';
+
+import 'helpers/fakes.dart';
 
 void main() {
   group('OnboardingPage', () {
@@ -73,6 +79,32 @@ void main() {
       await pumpBadge(tester, null);
 
       expect(find.byType(Text), findsNothing);
+    });
+  });
+
+  group('BookingPage', () {
+    final garage = sampleGarages.first;
+
+    testWidgets('shows spaces free for the chosen time', (tester) async {
+      final controller = BookingsController(
+        repository: InMemoryParkingRepository(),
+        reminders: FakeReminderService(),
+      )..load();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: controller,
+          child: MaterialApp(home: BookingPage(garage: garage)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Spaces free for this time'), findsOneWidget);
+      expect(
+        find.text('${garage.totalSpaces} of ${garage.totalSpaces} free'),
+        findsOneWidget,
+      );
     });
   });
 }

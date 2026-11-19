@@ -4,25 +4,24 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../models/booking.dart';
 import '../utils/formatters.dart';
+import 'reminder_service.dart';
 
-/// Schedules local reminders for bookings:
+/// [ReminderService] using local notifications. Reminders:
 ///  - 15 minutes before the session ends
 ///  - when the session has ended
 ///
 /// Everything here is best-effort. On unsupported platforms (web, desktop) or
 /// if the user denies permission, every method quietly does nothing, so a
 /// notification problem can never break booking.
-class NotificationService {
-  NotificationService._();
-
+class LocalNotificationService implements ReminderService {
   static const Duration _warningBeforeEnd = Duration(minutes: 15);
 
-  static final FlutterLocalNotificationsPlugin _plugin =
+  final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  static bool _ready = false;
+  bool _ready = false;
 
-  static bool get _platformSupported =>
+  bool get _platformSupported =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS);
@@ -39,7 +38,7 @@ class NotificationService {
   );
 
   /// Call once at startup, before runApp.
-  static Future<void> init() async {
+  Future<void> init() async {
     if (!_platformSupported) return;
 
     try {
@@ -60,7 +59,7 @@ class NotificationService {
     }
   }
 
-  static Future<bool> _ensurePermission() async {
+  Future<bool> _ensurePermission() async {
     if (!_ready) return false;
 
     try {
@@ -88,12 +87,12 @@ class NotificationService {
 
   /// Notification ids are 32-bit ints. Each booking uses two consecutive ids
   /// (warning, ended), both derived from the booking id.
-  static int _baseId(String bookingId) {
+  int _baseId(String bookingId) {
     final parsed = int.tryParse(bookingId) ?? bookingId.hashCode.abs();
     return (parsed % 1000000000) * 2;
   }
 
-  static Future<void> _schedule({
+  Future<void> _schedule({
     required int id,
     required String title,
     required String body,
@@ -113,7 +112,8 @@ class NotificationService {
     );
   }
 
-  static Future<void> scheduleBookingReminders(Booking booking) async {
+  @override
+  Future<void> scheduleBookingReminders(Booking booking) async {
     if (!_ready) return;
 
     try {
@@ -146,7 +146,8 @@ class NotificationService {
     }
   }
 
-  static Future<void> cancelBookingReminders(String bookingId) async {
+  @override
+  Future<void> cancelBookingReminders(String bookingId) async {
     if (!_ready) return;
 
     try {
@@ -166,7 +167,8 @@ class NotificationService {
   /// 10 seconds from now, so the whole reminder chain (permission, channel,
   /// scheduling) can be checked without waiting for a real booking.
   /// Returns a message describing what happened.
-  static Future<String> sendTestNotifications() async {
+  @override
+  Future<String> sendTestNotifications() async {
     if (!_platformSupported) {
       return 'Notifications are only available on Android and iOS.';
     }

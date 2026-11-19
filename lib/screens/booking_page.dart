@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../models/booking_exception.dart';
 import '../models/garage.dart';
-import '../services/storage_service.dart';
+import '../state/bookings_controller.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../widgets/availability_badge.dart';
 import 'booking_confirmation_page.dart';
 
 class BookingPage extends StatefulWidget {
@@ -99,7 +102,7 @@ class _BookingPageState extends State<BookingPage> {
     });
 
     try {
-      final booking = await StorageService.createBooking(
+      final booking = await context.read<BookingsController>().createBooking(
         garage: widget.garage,
         start: start,
         durationHours: _durationHours,
@@ -181,6 +184,12 @@ class _BookingPageState extends State<BookingPage> {
             ),
             const SizedBox(height: 16),
             _buildDurationCard(),
+            const SizedBox(height: 16),
+            _SlotAvailability(
+              garage: widget.garage,
+              start: _startDateTime,
+              durationHours: _durationHours,
+            ),
             const SizedBox(height: 20),
             _buildPriceSummary(),
             const SizedBox(height: 24),
@@ -313,7 +322,7 @@ class _BookingPageState extends State<BookingPage> {
             children: [
               const Text('Duration', style: TextStyle(color: secondaryText)),
               Text(
-                '$_durationHours hours',
+                formatHours(_durationHours),
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   color: darkText,
@@ -343,6 +352,49 @@ class _BookingPageState extends State<BookingPage> {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Spaces free for this time", recalculated whenever the chosen slot or the
+/// bookings change.
+class _SlotAvailability extends StatelessWidget {
+  final Garage garage;
+  final DateTime start;
+  final int durationHours;
+
+  const _SlotAvailability({
+    required this.garage,
+    required this.start,
+    required this.durationHours,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bookings = context.watch<BookingsController>();
+    final free = bookings.isLoaded
+        ? bookings.freeSpacesForSlot(garage, start, durationHours)
+        : null;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.event_seat_outlined, color: primaryTeal),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Spaces free for this time',
+              style: TextStyle(color: secondaryText),
+            ),
+          ),
+          AvailabilityBadge(available: free, total: garage.totalSpaces),
         ],
       ),
     );
